@@ -1,3 +1,3 @@
 # campbell-create.github.io
 
-[catan cards]()
+[catan cards](catan_front.js)
