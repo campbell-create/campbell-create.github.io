@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Catan Dev Cards</h1>
+<div id="div">
+<p id="gamestatus">Welcome! Enter a username:</p>
+<p id="players"></p>
+</div>
+<div id="debugdiv">
+<p id="debugstatus"></p>
+</div>
+<script>
+var gameId = 0;
+var pileId = 0;
+var piles = [];
+var hand = [];
+var username = -1;
+var cardsList = "AS,2S,3S,4S,5S,6S,7S,8S,9S,0S,JS,QS,KS,AH,2H,3H,4H,5H,6H,7H,8H,9H,0H,JH,QH";
+var deckurl = "https://deckofcardsapi.com/api/";
+
+var cardToCatan = {
+  "AS": "Knight",
+  "2S": "Knight",
+  "3S": "Knight",
+  "4S": "Knight",
+  "5S": "Knight",
+  "6S": "Knight",
+  "7S": "Knight",
+  "8S": "Knight",
+  "9S": "Knight",
+  "0S": "Knight",
+  "JS": "Knight",
+  "QS": "Knight",
+  "KS": "Knight",
+  "AH": "Knight",
+  "2H": "Year of Plenty",
+  "3H": "Year of Plenty",
+  "4H": "Monopoly",
+  "5H": "Monopoly",
+  "6H": "Road Building",
+  "7H": "Road Building",
+  "8H": "Victory Point",
+  "9H": "Victory Point",
+  "0H": "Victory Point",
+  "JH": "Victory Point",
+  "QH": "Victory Point",
+}
+
+login()
+
+function login() {
+  let usernametextbox = document.createElement("input");
+  usernametextbox.type = "text";
+  usernametextbox.id = "loginvalue";
+  document.body.appendChild(usernametextbox)
+  let getusernamebutton = document.createElement("BUTTON");
+  getusernamebutton.id = "loginbutton"
+  getusernamebutton.innerHTML = "Login";
+  getusernamebutton.onclick = function(){setUsername()};
+  document.body.appendChild(getusernamebutton)
+}
+
+function setUsername() {
+  let textbox = document.getElementById("loginvalue");
+  username = textbox.value;
+  if (username.length >= 1) {
+    destroyLogin();
+    enterGame();
+  }
+  else {
+    document.getElementById("gamestatus").innerHTML = "Enter a longer username";
+  }  
+}
+
+function destroyLogin() {
+  obj = document.getElementById("loginvalue");
+  obj.parentNode.removeChild(obj);
+  obj = document.getElementById("loginbutton");
+  obj.parentNode.removeChild(obj);
+}
+
+function enterGame() {
+  let welcome = "Welcome, " + username + "! You haven't joined a room yet. ";
+  welcome += "Create one by clicking \"new game\" or join one by entering a room id."
+  document.getElementById("gamestatus").innerHTML = welcome;
+
+  let newgamebutton = document.createElement("button");
+  newgamebutton.id = "newgamebutton";
+  newgamebutton.innerHTML = "Start New Game";
+  newgamebutton.onclick = function(){brandNewGame()};
+  document.body.appendChild(newgamebutton);
+  document.body.appendChild(document.createElement("br"));
+  let gameidtextbox = document.createElement("input");
+  gameidtextbox.type = "text";
+  gameidtextbox.id = "gameidvalue";
+  document.body.appendChild(gameidtextbox)
+  let getgameidbutton = document.createElement("BUTTON");
+  getgameidbutton.id = "gameidbutton"
+  getgameidbutton.innerHTML = "Enter";
+  getgameidbutton.onclick = function(){setGameId()};
+  document.body.appendChild(getgameidbutton)
+}
+async function setGameId() {
+  gameId = document.getElementById("gameidvalue").value;
+
+  if (gameId.length >= 1) {
+    destroyGetGameId();
+    await newGame();
+  }
+}
+async function brandNewGame() {
+  // create new deck
+  let url = deckurl + "deck/new/shuffle/?cards=" + cardsList;
+  let data = await makeRequest(url);
+  gameId = data.deck_id;
+
+  destroyGetGameId();
+  // setup deck into drawpile/discard/user piles
+  await setupDeck();
+  await newGame();
+}
+
+function destroyGetGameId() {
+  let obj = document.getElementById("gameidvalue");
+  obj.parentNode.removeChild(obj);
+  obj = document.getElementById("newgamebutton");
+  obj.parentNode.removeChild(obj);
+  obj = document.getElementById("gameidbutton");
+  obj.parentNode.removeChild(obj);
+}
+
+async function newGame() {
+  // post id
+  let statustext = "You (" + username + ") are in a game! Game id: " + gameId;
+  document.getElementById("gamestatus").innerHTML = statustext;
+
+  // create hand for this user
+  let newhandurl = deckurl + "deck/" + gameId + "/pile/" + username + "/add/?cards=";
+  var retval;
+  let result = await makeRequest(newhandurl);
+  
+  var tag = document.createElement("p");
+  tag.id = "ptag";
+  let br = document.createElement("br");
+  br.id = "br";
+  var tag2 = document.createElement("p");
+  tag2.id = "handtag"
+
+  var element = document.getElementById("div");
+  div.appendChild(tag);
+  div.appendChild(tag2);
+  div.appendChild(br);
+
+  // draw card button
+  let btn1 = document.createElement("button");
+  btn1.id = "drawbtn";
+  btn1.innerHTML = "Draw a card";
+  btn1.onclick = function(){drawCard()};
+  document.body.appendChild(btn1);
+
+  // play card buttons
+  let btn2 = document.createElement("button");
+  btn2.id = "playknightbtn";
+  btn2.innerHTML = "play a knight card";
+  btn2.onclick = function(){playKnight()};
+  let btn3 = document.createElement("button");
+  btn3.id = "playmonopolybtn";
+  btn3.innerHTML = "play a Monopoly card";
+  btn3.onclick = function(){playMonopoly()};
+  let btn4 = document.createElement("button");
+  btn4.id = "playplentybtn";
+  btn4.innerHTML = "play a Year of Plenty card";
+  btn4.onclick = function(){playYearofPlenty()};
+  let btn5 = document.createElement("button");
+  btn5.id = "playroadsbtn";
+  btn5.innerHTML = "play a Roadbuilding card";
+  btn5.onclick = function(){playRoadbuilding()};
+  document.body.appendChild(btn2);
+  document.body.appendChild(btn3);
+  document.body.appendChild(btn4);
+  document.body.appendChild(btn5);
+
+  // reset deck button?
+
+  await parseHand();
+}
+
+async function playMonopoly() {
+  await playCard("Monopoly");
+}
+
+async function playYearofPlenty() {
+  await playCard("Year of Plenty");
+}
+
+async function playRoadbuilding() {
+  await playCard("Road Building");
+}
+
+async function playKnight() {
+  await playCard("Knight");
+}
+
+async function playCard(type) {
+  // get current hand
+  let url = deckurl + "deck/" + gameId + "/pile/" + username + "/list";
+  let res = await fetch(url);
+  res = await res.json();
+  //document.getElementById("debugstatus").innerHTML = "";
+  // is there a card of the given type?
+  let cards = res.piles[username].cards;
+  let ever = false;
+  for (card in cards) {
+    if (type === cardToCatan[cards[card].code]) {
+      // play it (put on discard pile)
+      let url = deckurl + "deck/" + gameId + "/pile/" + username + "/draw/?cards=" + cards[card].code;
+      let res = await fetch(url);
+      url = deckurl + "deck/" + gameId + "/pile/discardpile/add/?cards=" + cards[card].code;
+      res = await fetch(url);
+      ever = true;
+      // leave the loop to avoid playing too many cards
+      break;
+    }
+  }
+  if (ever === false) {
+    // if we never found the card, print err msg
+    document.getElementById("debugstatus").innerHTML = "You dont have that kind of card!";
+  } else {
+    document.getElementById("debugstatus").innerHTML = "You played a " + type + "card!";
+  }
+  await parseHand();
+}
+
+async function setupDeck() {
+  // move every card to the drawpile
+  let drawurl = deckurl + "deck/" + gameId + "/draw/?count=25";
+  let response = await fetch(drawurl);
+  var cards = await response.json();
+
+  let placeurl = deckurl + "deck/" + gameId + "/pile/drawpile/add/?cards=" + cardsList;
+  response = await fetch(placeurl);
+  response = await response.json();
+
+  let url = deckurl + "deck/" + gameId + "/pile/drawpile/list";
+  response = await fetch(url);
+  response = await response.json();
+
+  let players = Object.keys(response.piles);
+  var i = 0;
+  let subset = [];
+  for (i=0; i < players.length; i++) {
+    if (players[i] !== "drawpile" && players[i] !== "discardpile") {
+      subset.push(players[i]);
+    }
+  }
+  document.getElementById("gamestatus").innerHTML = "Players in the game: " + JSON.stringify(subset);
+}
+
+async function drawCard() {
+  // check that there's a card still in the draw pile
+  let url = deckurl + "deck/" + gameId + "/pile/drawpile/list";
+  //document.getElementById("debugstatus").innerHTML = url;
+  
+  let response = await fetch(url);
+  var data = await response.json();
+  document.getElementById("debugstatus").innerHTML = JSON.stringify(data);
+        
+  // if we've reached the end of the deck
+  if (data.piles.drawpile.remaining === 0) {
+    // re-shuffle the deck
+    document.getElementById("debugstatus").innerHTML = "Reshuffling deck";
+    await reshuffleDeck();
+    //document.getElementById("debugstatus").innerHTML = "Reshuffled deck.";
+  }
+  //document.getElementById("debugstatus").innerHTML = "Reshuffled deck. Drawing card:";
+  // draw a new card
+  url = deckurl + "deck/" + gameId + "/pile/drawpile/draw/?count=1";
+  response = await fetch(url);
+  //document.getElementById("debugstatus").innerHTML = JSON.stringify(await response.json());
+  data = await response.json();
+  //document.getElementById("debugstatus").innerHTML = "draw returned: " + JSON.stringify(data);
+  
+  if (data.success === true) {
+    //document.getElementById("debugstatus").innerHTML = "drew card successfully!";
+    let newcard = data.cards[0].code;
+    url = deckurl + "deck/" + gameId + "/pile/" + username + "/add/?cards=" + newcard;
+    document.getElementById("debugstatus").innerHTML = url;
+    response = await fetch(url);
+    response = await response.json();
+    await parseHand();
+  }
+}
+
+async function reshuffleDeck() {
+  // get the number of things in the discard pile
+  let url = deckurl + "deck/" + gameId + "/pile/discardpile/list";
+  let res = await fetch(url);
+  res = await res.json();
+  let piles = res.piles;
+  
+  // take everything in the discard pile, and put it in the regular deck.
+  if ("discardpile" in piles) {
+    let discardpile = piles.discardpile;
+    document.getElementById("debugstatus").innerHTML = "piles: " + JSON.stringify(discardpile);
+    let numcards = discardpile.remaining;
+    document.getElementById("gamestatus").innerHTML = "cards in discard pile: " + numcards;
+    if (numcards > 0) {
+      // draw all the discarded cards
+      let url = deckurl + "deck/" + gameId + "/pile/discardpile/draw/?count=" + numcards;
+      let res = await fetch(url);
+      res = await res.json();
+      let cards = res.cards;
+      document.getElementById("debugstatus").innerHTML = "cards drawn: " + JSON.stringify(cards);
+      for (card in cards) {
+        let url = deckurl + "deck/" + gameId + "/pile/drawpile/add/?cards=" + cards[card].code;
+        await fetch(url);
+      }
+    }
+    // shuffle the regular deck
+    url = deckurl + "deck/" + gameId + "/pile/drawpile/shuffle";
+    res = await fetch(url);
+    // verify
+    url = deckurl + "deck/" + gameId + "/pile/drawpile/list";
+    res = await fetch(url);
+    res = await res.json();
+    //document.getElementById("debugstatus").innerHTML = "cards in drawpile: " + JSON.stringify(res.piles.drawpile.cards);
+  } else {
+    document.getElementById("debugstatus").innerHTML = "how did this happen";
+  }
+  await parseHand();
+}
+
+async function parseHand() {
+  let url = deckurl + "deck/" + gameId + "/pile/" + username + "/list";
+  var r = await fetch(url);
+  r = await r.json();
+  piles = r.piles;
+  players = Object.keys(piles);
+
+  hand = [];
+  for (player in piles) {
+    if (player === username) {
+      cards = piles[player].cards;
+      for (card in cards) {
+        code = cards[card].code;
+        hand.push(cardToCatan[code])
+      }
+    }
+  }
+  var i = 0;
+  let subset = [];
+  for (i=0; i < players.length; i++) {
+    if (players[i] !== "drawpile" && players[i] !== "discardpile") {
+      subset.push(players[i]);
+    }
+  }
+  document.getElementById("handtag").innerHTML = "Your hand: " + JSON.stringify(hand);
+  let statustext = "You (" + username + ") are in a game! Game id: " + gameId;
+  statustext += " Players in the game: " + JSON.stringify(subset)
+  document.getElementById("gamestatus").innerHTML = statustext;
+}
+
+async function makeRequest(url) {
+  var retval = await fetch(url);
+  retval = await retval.json();
+  return retval;
+}
+</script>
+</body>
+</html>
+
