@@ -207,7 +207,7 @@ async function playCard(type) {
   let url = deckurl + "deck/" + gameId + "/pile/" + username + "/list";
   let res = await fetch(url);
   res = await res.json();
-  //document.getElementById("debugstatus").innerHTML = "";
+  
   // is there a card of the given type?
   let cards = res.piles[username].cards;
   let ever = false;
@@ -227,7 +227,7 @@ async function playCard(type) {
     // if we never found the card, print err msg
     document.getElementById("debugstatus").innerHTML = "You dont have that kind of card!";
   } else {
-    document.getElementById("debugstatus").innerHTML = "You played a " + type + "card!";
+    document.getElementById("debugstatus").innerHTML = "You played a " + type + " card!";
   }
   await parseHand();
 }
@@ -246,6 +246,9 @@ async function setupDeck() {
   response = await fetch(url);
   response = await response.json();
 
+  url = deckurl + "deck/" + gameId + "/pile/drawpile/shuffle";
+  await fetch(url);
+
   let players = Object.keys(response.piles);
   var i = 0;
   let subset = [];
@@ -260,34 +263,26 @@ async function setupDeck() {
 async function drawCard() {
   // check that there's a card still in the draw pile
   let url = deckurl + "deck/" + gameId + "/pile/drawpile/list";
-  //document.getElementById("debugstatus").innerHTML = url;
   
   let response = await fetch(url);
   var data = await response.json();
-  document.getElementById("debugstatus").innerHTML = JSON.stringify(data);
         
   // if we've reached the end of the deck
   if (data.piles.drawpile.remaining === 0) {
     // re-shuffle the deck
-    document.getElementById("debugstatus").innerHTML = "Reshuffling deck";
     await reshuffleDeck();
-    //document.getElementById("debugstatus").innerHTML = "Reshuffled deck.";
   }
-  //document.getElementById("debugstatus").innerHTML = "Reshuffled deck. Drawing card:";
   // draw a new card
   url = deckurl + "deck/" + gameId + "/pile/drawpile/draw/?count=1";
   response = await fetch(url);
-  //document.getElementById("debugstatus").innerHTML = JSON.stringify(await response.json());
   data = await response.json();
-  //document.getElementById("debugstatus").innerHTML = "draw returned: " + JSON.stringify(data);
   
   if (data.success === true) {
-    //document.getElementById("debugstatus").innerHTML = "drew card successfully!";
     let newcard = data.cards[0].code;
     url = deckurl + "deck/" + gameId + "/pile/" + username + "/add/?cards=" + newcard;
-    document.getElementById("debugstatus").innerHTML = url;
     response = await fetch(url);
     response = await response.json();
+    document.getElementById("debugstatus").innerHTML = "You drew a " + cardToCatan[newcard] + " card!";
     await parseHand();
   }
 }
@@ -302,7 +297,7 @@ async function reshuffleDeck() {
   // take everything in the discard pile, and put it in the regular deck.
   if ("discardpile" in piles) {
     let discardpile = piles.discardpile;
-    document.getElementById("debugstatus").innerHTML = "piles: " + JSON.stringify(discardpile);
+    
     let numcards = discardpile.remaining;
     document.getElementById("gamestatus").innerHTML = "cards in discard pile: " + numcards;
     if (numcards > 0) {
@@ -311,11 +306,12 @@ async function reshuffleDeck() {
       let res = await fetch(url);
       res = await res.json();
       let cards = res.cards;
-      document.getElementById("debugstatus").innerHTML = "cards drawn: " + JSON.stringify(cards);
       for (card in cards) {
         let url = deckurl + "deck/" + gameId + "/pile/drawpile/add/?cards=" + cards[card].code;
         await fetch(url);
       }
+    } else {
+      document.getElementById("debugstatus").innerHTML = "Tried to reshuffle the deck, but the discard pile is empty.";
     }
     // shuffle the regular deck
     url = deckurl + "deck/" + gameId + "/pile/drawpile/shuffle";
@@ -324,9 +320,8 @@ async function reshuffleDeck() {
     url = deckurl + "deck/" + gameId + "/pile/drawpile/list";
     res = await fetch(url);
     res = await res.json();
-    //document.getElementById("debugstatus").innerHTML = "cards in drawpile: " + JSON.stringify(res.piles.drawpile.cards);
   } else {
-    document.getElementById("debugstatus").innerHTML = "how did this happen";
+    document.getElementById("debugstatus").innerHTML = "Tried to reshuffle the deck, but no cards have been played.";
   }
   await parseHand();
 }
