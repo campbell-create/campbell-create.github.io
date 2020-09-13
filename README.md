@@ -1,6 +1,6 @@
 <html>
 <body>
-<a href="catan_front.html">cards</a>
+<a href="catan_cards.html">cards</a>
 
 </body>
 </html>
