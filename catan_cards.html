@@ -311,7 +311,7 @@ async function reshuffleDeck() {
         await fetch(url);
       }
     } else {
-      document.getElementById("debugstatus").innerHTML = "Tried to reshuffle the deck, but the discard pile is empty.";
+      document.getElementById("debugstatus").innerHTML = "Tried to reshuffle the deck, but the discard pile is empty.";      
     }
     // shuffle the regular deck
     url = deckurl + "deck/" + gameId + "/pile/drawpile/shuffle";
@@ -339,10 +339,11 @@ async function parseHand() {
       cards = piles[player].cards;
       for (card in cards) {
         code = cards[card].code;
-        hand.push(cardToCatan[code])
+        hand.push(cardToCatan[code]);
       }
     }
   }
+  hand.sort();
   var i = 0;
   let subset = [];
   for (i=0; i < players.length; i++) {
@@ -352,7 +353,7 @@ async function parseHand() {
   }
   document.getElementById("handtag").innerHTML = "Your hand: " + JSON.stringify(hand);
   let statustext = "You (" + username + ") are in a game! Game id: " + gameId;
-  statustext += " Players in the game: " + JSON.stringify(subset)
+  statustext += " Players in the game: " + JSON.stringify(subset);
   document.getElementById("gamestatus").innerHTML = statustext;
 }
 
