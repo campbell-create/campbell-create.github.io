@@ -232,7 +232,7 @@ async function playCard(type) {
   } else {
     if (type == "Knight") {
       numKnights += 1;
-      document.GetElementById("knightstatus").innerHTML = "You have played:" + JSON.stringify(numKnights) + " knight cards.";
+      document.getElementById("knightstatus").innerHTML = "You have played:" + JSON.stringify(numKnights) + " knight cards.";
     }
     document.getElementById("debugstatus").innerHTML = "You played a " + type + " card!";
   }
